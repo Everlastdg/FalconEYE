@@ -13,6 +13,9 @@ from ..persistence.chroma_metadata_repository import ChromaMetadataRepository
 from ..registry.chroma_registry_adapter import ChromaIndexRegistryAdapter
 from ..ast.ast_analyzer import EnhancedASTAnalyzer
 from ..plugins.plugin_registry import PluginRegistry
+from ..chunking import LargeFileChunker, ChunkingStrategy
+from ..parallel import AnalysisWorkerPool, WorkerConfig
+from ..streaming import ResultStreamer
 from ...domain.services.security_analyzer import SecurityAnalyzer
 from ...domain.services.context_assembler import ContextAssembler
 from ...domain.services.language_detector import LanguageDetector
@@ -48,6 +51,10 @@ class DIContainer:
     language_detector: LanguageDetector
     project_identifier: ProjectIdentifier
     checksum_service: ChecksumService
+
+    # New Infrastructure Components
+    large_file_chunker: LargeFileChunker
+    worker_pool: AnalysisWorkerPool
 
     # Application Handlers
     index_handler: IndexCodebaseHandler
@@ -128,6 +135,30 @@ class DIContainer:
         project_identifier = ProjectIdentifier()
         checksum_service = ChecksumService()
 
+        # Large file chunker
+        chunking_strategy = ChunkingStrategy(config.large_files.strategy)
+        large_file_chunker = LargeFileChunker(
+            max_lines_single_pass=config.large_files.max_lines_single_pass,
+            chunk_size_lines=config.large_files.chunk_size_lines,
+            chunk_overlap_lines=config.large_files.chunk_overlap_lines,
+            strategy=chunking_strategy,
+            max_file_size_mb=config.large_files.max_file_size_mb,
+            ast_analyzer=ast_analyzer,
+        )
+
+        # Worker pool for parallel processing
+        worker_config = WorkerConfig(
+            max_workers=config.parallel.max_workers,
+            llm_concurrency=config.parallel.llm_concurrency,
+            timeout_per_file=config.parallel.timeout_per_file,
+        )
+        worker_pool = AnalysisWorkerPool(
+            config=worker_config,
+            security_analyzer=security_analyzer,
+            context_assembler=context_assembler,
+            large_file_chunker=large_file_chunker,
+        )
+
         # Application handlers - Use cases
         index_handler = IndexCodebaseHandler(
             vector_store=vector_store,
@@ -158,6 +189,8 @@ class DIContainer:
             language_detector=language_detector,
             project_identifier=project_identifier,
             checksum_service=checksum_service,
+            large_file_chunker=large_file_chunker,
+            worker_pool=worker_pool,
             index_handler=index_handler,
             review_file_handler=review_file_handler,
         )
