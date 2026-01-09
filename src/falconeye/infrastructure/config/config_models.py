@@ -199,104 +199,6 @@ class AnalysisConfig(BaseModel):
     )
 
 
-class ParallelConfig(BaseModel):
-    """Parallel processing configuration."""
-    enabled: bool = Field(
-        default=True,
-        description="Enable parallel file analysis"
-    )
-    max_workers: int = Field(
-        default=4,
-        ge=1,
-        le=16,
-        description="Maximum concurrent file analysis workers"
-    )
-    llm_concurrency: int = Field(
-        default=2,
-        ge=1,
-        le=8,
-        description="Maximum concurrent LLM API calls"
-    )
-    timeout_per_file: int = Field(
-        default=300,
-        ge=60,
-        le=1800,
-        description="Timeout in seconds per file analysis"
-    )
-
-
-class StreamingConfig(BaseModel):
-    """Streaming/incremental results configuration."""
-    enabled: bool = Field(
-        default=True,
-        description="Enable streaming results as files are analyzed"
-    )
-    flush_interval: int = Field(
-        default=1,
-        ge=1,
-        le=10,
-        description="Number of files to process before flushing results"
-    )
-    show_progress: bool = Field(
-        default=True,
-        description="Show real-time progress in console"
-    )
-    incremental_save: bool = Field(
-        default=True,
-        description="Save results incrementally to file"
-    )
-
-
-class LargeFileConfig(BaseModel):
-    """Large file handling configuration."""
-    max_lines_single_pass: int = Field(
-        default=500,
-        ge=100,
-        le=2000,
-        description="Files larger than this get chunked for analysis"
-    )
-    chunk_size_lines: int = Field(
-        default=300,
-        ge=50,
-        le=1000,
-        description="Lines per chunk when splitting large files"
-    )
-    chunk_overlap_lines: int = Field(
-        default=50,
-        ge=10,
-        le=200,
-        description="Overlap between chunks to maintain context"
-    )
-    strategy: str = Field(
-        default="hybrid",
-        description="Chunking strategy: 'hybrid' (AST-aware + lines), 'ast' (by function/class), 'lines' (fixed line chunks)"
-    )
-    max_file_size_mb: int = Field(
-        default=10,
-        ge=1,
-        le=100,
-        description="Skip files larger than this (in MB)"
-    )
-
-    @field_validator('strategy')
-    @classmethod
-    def validate_strategy(cls, v):
-        """Ensure strategy is valid."""
-        valid_strategies = ["hybrid", "ast", "lines"]
-        v = v.lower()
-        if v not in valid_strategies:
-            raise ValueError(f"strategy must be one of {valid_strategies}")
-        return v
-
-    @field_validator('chunk_overlap_lines')
-    @classmethod
-    def validate_chunk_overlap(cls, v, info):
-        """Ensure overlap is less than chunk size."""
-        if 'chunk_size_lines' in info.data and v >= info.data['chunk_size_lines']:
-            raise ValueError("chunk_overlap_lines must be less than chunk_size_lines")
-        return v
-
-
 class LanguagesConfig(BaseModel):
     """Language support configuration."""
     enabled: List[str] = Field(
@@ -431,9 +333,6 @@ class FalconEyeConfig(BaseModel):
     file_discovery: FileDiscoveryConfig = Field(default_factory=FileDiscoveryConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
-    parallel: ParallelConfig = Field(default_factory=ParallelConfig)
-    streaming: StreamingConfig = Field(default_factory=StreamingConfig)
-    large_files: LargeFileConfig = Field(default_factory=LargeFileConfig)
 
     def to_yaml(self) -> str:
         """Convert configuration to YAML string."""

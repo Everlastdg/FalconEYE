@@ -94,25 +94,3 @@ logging:
   console: true  # Enable console logging
   rotation: daily  # Log rotation strategy (daily, none)
   retention_days: 30  # Number of days to retain logs
-
-# Parallel Processing
-parallel:
-  enabled: true  # Enable parallel file analysis
-  max_workers: 4  # Maximum concurrent file analysis workers
-  llm_concurrency: 2  # Maximum concurrent LLM API calls
-  timeout_per_file: 300  # Timeout in seconds per file analysis
-
-# Streaming Results
-streaming:
-  enabled: true  # Enable streaming results as files are analyzed
-  flush_interval: 1  # Number of files to process before flushing results
-  show_progress: true  # Show real-time progress in console
-  incremental_save: true  # Save results incrementally to file
-
-# Large File Handling
-large_files:
-  max_lines_single_pass: 500  # Files larger than this get chunked
-  chunk_size_lines: 300  # Lines per chunk when splitting large files
-  chunk_overlap_lines: 50  # Overlap between chunks to maintain context
-  strategy: hybrid  # Chunking strategy: hybrid, ast, lines
-  max_file_size_mb: 10  # Skip files larger than this (in MB)
