@@ -1,0 +1,52 @@
+# FalconEYE v2.0 - Locked Dependencies
+#
+# These versions are tested and known to work together
+# Fixes common ChromaDB + onnxruntime dependency conflicts
+
+# Vector database and ML dependencies (most sensitive to conflicts)
+# Note: These versions are tested together and avoid common conflicts
+chromadb==1.0.9
+numpy==2.1.3
+onnxruntime==1.20.1
+
+# CRITICAL: Protobuf must be <5.0 for chromadb compatibility
+# If you have protobuf 5.x, you MUST downgrade
+protobuf==4.25.6
+
+# LLM integration
+ollama==0.4.7
+
+# Data validation
+pydantic==2.10.5
+pydantic-settings==2.7.1
+
+# Configuration and CLI
+PyYAML==6.0.2
+typer==0.15.2
+rich==14.1.0
+
+# AST parsing
+tree-sitter==0.24.6
+tree-sitter-language-pack==0.8.0
+
+# ChromaDB dependencies (transitive, but pinned for stability)
+httpx==0.28.1
+fastapi==0.115.6
+uvicorn==0.34.0
+tenacity==9.0.0
+posthog==3.7.6
+tokenizers==0.21.0
+orjson==3.10.13
+grpcio==1.69.0
+
+# OpenTelemetry (for ChromaDB)
+opentelemetry-api==1.25.0
+opentelemetry-sdk==1.25.0
+opentelemetry-exporter-otlp-proto-grpc==1.25.0
+opentelemetry-instrumentation-fastapi==0.46b0
+
+# Additional utilities
+tqdm==4.67.1
+overrides==7.7.0
+mmh3==5.0.1
+bcrypt==4.2.1

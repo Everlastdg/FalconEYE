@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(source .venv321/bin/activate:*)",
+      "Bash(pytest:*)"
+    ]
+  }
+}
