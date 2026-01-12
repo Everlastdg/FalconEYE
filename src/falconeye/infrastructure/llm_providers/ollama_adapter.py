@@ -1,7 +1,7 @@
 """Ollama LLM adapter implementation."""
 
 import asyncio
-from typing import List
+from typing import List, Optional, Callable
 import time
 import ollama
 from ...domain.services.llm_service import LLMService
@@ -90,6 +90,7 @@ class OllamaLLMAdapter(LLMService):
         self,
         context: PromptContext,
         system_prompt: str,
+        stream_callback: Optional[Callable[[str], None]] = None,
     ) -> str:
         """
         Analyze code for security vulnerabilities using AI.
@@ -101,6 +102,7 @@ class OllamaLLMAdapter(LLMService):
         Args:
             context: Full context for AI analysis
             system_prompt: System instructions for AI
+            stream_callback: Optional callback to receive streaming tokens
 
         Returns:
             Raw AI response with security findings
@@ -117,16 +119,24 @@ class OllamaLLMAdapter(LLMService):
                 extra={
                     "model": self.chat_model,
                     "prompt_length": prompt_length,
-                    "temperature": self.temperature
+                    "temperature": self.temperature,
+                    "streaming": stream_callback is not None
                 }
             )
 
             try:
-                # Call LLM
-                response = await self._call_ollama(
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt,
-                )
+                # Call LLM with streaming support if callback provided
+                if stream_callback:
+                    response = await self._call_ollama_stream(
+                        system_prompt=system_prompt,
+                        user_prompt=user_prompt,
+                        stream_callback=stream_callback,
+                    )
+                else:
+                    response = await self._call_ollama(
+                        system_prompt=system_prompt,
+                        user_prompt=user_prompt,
+                    )
 
                 duration = time.time() - start_time
                 response_length = len(response) if response else 0
@@ -408,3 +418,53 @@ Create a concise but comprehensive summary of all identified issues."""
             return response["message"]["content"]
 
         return await _call_with_protection()
+
+    async def _call_ollama_stream(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        stream_callback: Callable[[str], None],
+    ) -> str:
+        """
+        Internal method to call Ollama API with streaming support.
+
+        Args:
+            system_prompt: System instructions
+            user_prompt: User query
+            stream_callback: Callback to receive streaming tokens
+
+        Returns:
+            Complete AI response text
+        """
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
+
+        # Run streaming in executor to avoid blocking
+        loop = asyncio.get_event_loop()
+        
+        def _stream_chat():
+            """Synchronous wrapper for streaming chat."""
+            full_response = ""
+            for chunk in self.client.chat(
+                model=self.chat_model,
+                messages=messages,
+                stream=True,
+                options={
+                    "temperature": self.temperature,
+                    "num_ctx": self.chat_max_tokens,
+                    "num_predict": self.max_response_tokens,
+                },
+            ):
+                if "message" in chunk and "content" in chunk["message"]:
+                    token = chunk["message"]["content"]
+                    full_response += token
+                    # Call the callback with the token if provided
+                    if stream_callback:
+                        stream_callback(token)
+            
+            return full_response
+
+        response = await loop.run_in_executor(None, _stream_chat)
+        return response

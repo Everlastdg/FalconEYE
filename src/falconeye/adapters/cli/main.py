@@ -79,7 +79,7 @@ def index(
     verbose: bool = typer.Option(
         False,
         "--verbose", "-v",
-        help="Enable verbose output with technical details",
+        help="Enable verbose output with technical details and full logs",
     ),
 ):
     """
@@ -87,6 +87,10 @@ def index(
 
     Indexes source code files, generates embeddings, and extracts metadata.
     This is required before running security reviews.
+    
+    Usage:
+        falconeye index <path>        # Normal mode: Progress bar only
+        falconeye index <path> -v     # Verbose mode: Full indexing logs
     """
     index_command(
         path=path,
@@ -147,7 +151,7 @@ def review(
     verbose: bool = typer.Option(
         False,
         "--verbose", "-v",
-        help="Enable verbose output",
+        help="Enable verbose output with full logs",
     ),
 ):
     """
@@ -155,6 +159,10 @@ def review(
 
     Performs AI-powered security analysis on the specified code.
     The codebase should be indexed first for best results (RAG context).
+    
+    Usage:
+        falconeye review <path>       # Normal mode: Progress bar and results
+        falconeye review <path> -v    # Verbose mode: Full logs and LLM streaming
     """
     review_command(
         path=path,
@@ -215,7 +223,7 @@ def scan(
     verbose: bool = typer.Option(
         False,
         "--verbose", "-v",
-        help="Enable verbose output",
+        help="Enable verbose output with full logs",
     ),
 ):
     """
@@ -223,6 +231,25 @@ def scan(
 
     Convenience command that indexes the codebase and then performs
     a security review.
+    
+    Usage Examples:
+        falconeye scan <path>              # Normal mode: Shows progress bar and final results only
+        falconeye scan <path> -v           # Verbose mode: Shows full logs, LLM streaming, and detailed progress
+        falconeye scan <path> --verbose    # Verbose mode: Same as -v (alternative syntax)
+    
+    Output Modes:
+        Normal mode (-v not used):
+            - Progress bar showing file count and current file being analyzed
+            - Findings displayed in real-time as they're detected
+            - Final summary with all findings
+            - Clean output without detailed logs
+        
+        Verbose mode (-v or --verbose):
+            - All indexing logs (file processing, chunking, embedding generation)
+            - LLM thought process streaming (AI analysis in real-time)
+            - All security analysis logs
+            - Detailed progress information
+            - Full error details if analysis fails
     """
     scan_command(
         path=path,
