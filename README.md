@@ -292,13 +292,43 @@ Machine-readable format for CI/CD integration and programmatic processing:
 | `falconeye index <path>` | Index codebase for analysis |
 | `falconeye review <path>` | Analyze code for vulnerabilities |
 | `falconeye scan <path>` | Index and review in one step |
+| `falconeye scan <path> -v` | Scan with verbose output (full logs + LLM streaming) |
 | `falconeye projects list` | Show all indexed projects |
 | `falconeye projects info <id>` | Display project details |
 | `falconeye projects delete <id>` | Delete a project and its data |
 | `falconeye projects cleanup` | Remove orphaned project data |
 | `falconeye info` | System and configuration information |
 
-Run `falconeye --help` for complete documentation.
+### Verbose Mode (`-v` or `--verbose`)
+
+The verbose flag enables detailed output for better visibility into the analysis process:
+
+**Normal Mode** (default):
+- Clean progress bar showing file count and percentage
+- Real-time findings display as they're detected
+- Final summary with all results
+- Minimal log output
+
+**Verbose Mode** (`-v`):
+- Full indexing logs (file processing, chunking, embedding generation)
+- LLM thought process streaming (see AI analysis in real-time)
+- All security analysis logs and details
+- Detailed progress information
+- Complete error stack traces if analysis fails
+
+**Examples:**
+```bash
+# Normal mode - clean output
+falconeye scan ./src
+
+# Verbose mode - detailed output with LLM streaming
+falconeye scan ./src -v
+
+# Alternative verbose syntax
+falconeye scan ./src --verbose
+```
+
+Run `falconeye --help` or `falconeye scan --help` for complete documentation.
 
 ### Areas for Contribution
 - **Language Support**: Add support for new programming languages

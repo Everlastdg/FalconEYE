@@ -1,7 +1,7 @@
 """LLM service interface (Port)."""
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional, Callable, AsyncIterator
 from ..models.prompt import PromptContext
 
 
@@ -20,6 +20,7 @@ class LLMService(ABC):
         self,
         context: PromptContext,
         system_prompt: str,
+        stream_callback: Optional[Callable[[str], None]] = None,
     ) -> str:
         """
         Analyze code for security vulnerabilities using AI.
@@ -30,6 +31,7 @@ class LLMService(ABC):
         Args:
             context: Full context for AI analysis
             system_prompt: System instructions for the AI
+            stream_callback: Optional callback to receive streaming tokens
 
         Returns:
             Raw AI response (usually JSON with findings)

@@ -2,9 +2,10 @@
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional, Callable
 import time
 
-from ...domain.models.security import SecurityReview
+from ...domain.models.security import SecurityReview, SecurityFinding
 from ...domain.services.security_analyzer import SecurityAnalyzer
 from ...domain.services.context_assembler import ContextAssembler
 from ...infrastructure.logging import FalconEyeLogger
@@ -23,6 +24,8 @@ class ReviewFileCommand:
     system_prompt: str
     validate_findings: bool = False
     top_k_context: int = 5
+    stream_callback: Optional[Callable[[str], None]] = None
+    finding_callback: Optional[Callable[['SecurityFinding'], None]] = None
 
 
 class ReviewFileHandler:
@@ -97,6 +100,8 @@ class ReviewFileHandler:
         findings = await self.security_analyzer.analyze_code(
             context=context,
             system_prompt=command.system_prompt,
+            stream_callback=command.stream_callback,
+            finding_callback=command.finding_callback,
         )
 
         # Add findings to review
